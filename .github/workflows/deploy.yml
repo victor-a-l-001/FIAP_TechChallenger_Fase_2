@@ -1,0 +1,52 @@
+name: CD (Fake Deploy)
+
+# 🔥 Apenas manual (via botão "Run workflow")
+on:
+  workflow_dispatch:
+
+# 🚨 Para o gatilho automático (comentado) é necessário remover o #
+# on:
+#   push:
+#     branches:
+#       - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 📥 Baixa o código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 🐳 Instala Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      # 🐙 Instala Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # 🏗️ Builda e sobe os containers
+      - name: Build and run containers
+        run: |
+          echo "🔧 Buildando e subindo com docker-compose..."
+          docker-compose up -d
+          echo "⏳ Esperando a API subir..."
+          sleep 15
+
+      # ✅ Testa se a API está rodando
+      - name: Check API health
+        run: |
+          echo "🔍 Testando se a API está rodando..."
+          curl -f http://localhost:3000/health || exit 1
+          echo "🎉 API respondeu com sucesso!"
+
+      # 🧹 Derruba os containers no final
+      - name: Stop containers
+        if: always()
+        run: |
+          echo "🛑 Derrubando containers..."
+          docker-compose down
