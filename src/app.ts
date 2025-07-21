@@ -40,6 +40,11 @@ app.use(
   }),
 );
 
+// Verificar saúde da api
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Swagger
 setupSwagger(app);
 
