@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+  seed     = "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique
+  password   String
+  disabled   Boolean   @default(false)
+  userTypeId Int
+  userType   UserType  @relation(fields: [userTypeId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  posts Post[]
+}
+
+model UserType {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @unique
+  createdAt   DateTime @default(now())
+  users       User[]
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  title     String
+  content   String
+  authorId  Int
+  disabled  Boolean   @default(false)
+  author    User      @relation(fields: [authorId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}

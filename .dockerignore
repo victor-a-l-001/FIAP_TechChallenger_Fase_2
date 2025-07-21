@@ -1,0 +1,27 @@
+# Dependências e builds
+coverage
+.vscode
+node_modules
+dist
+
+# Arquivos de configuração local
+.env
+.env.e2e
+.env.test
+.env.local
+.env.*.local
+
+# Código de testes
+test
+tests
+prisma-e2e
+*.spec.ts
+*.test.ts
+
+# Git e logs
+.git
+*.log
+
+# Docker
+Dockerfile*
+docker-compose*.yml

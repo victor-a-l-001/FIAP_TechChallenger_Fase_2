@@ -1,0 +1,43 @@
+services:
+  # Banco de Dados
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  # API Node.js
+  api:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env.docker
+    command: >
+      sh -c "
+        echo '⏳ Aguardando o banco…' &&
+        until pg_isready -h db -p 5432 -U prisma; do sleep 1; done &&
+
+        echo '🔧 Gerando Prisma Client…' &&
+        npx prisma generate &&
+
+        echo '🚀 Aplicando migrations…' &&
+        npx prisma migrate deploy &&
+
+        echo '🌱 Rodando seed' &&
+        npx prisma db seed &&
+
+        echo '🎉 Iniciando a aplicação…' &&
+        npm start
+       "
+volumes:
+  db_data:
