@@ -4,9 +4,9 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - '5432:5432'
     volumes:
@@ -20,12 +20,14 @@ services:
       - db
     ports:
       - '3000:3000'
-    env_file:
-      - .env.docker
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV}
     command: >
       sh -c "
         echo '⏳ Aguardando o banco…' &&
-        until pg_isready -h db -p 5432 -U prisma; do sleep 1; done &&
+        until pg_isready -h db -p 5432 -U ${POSTGRES_USER}; do sleep 1; done &&
 
         echo '🔧 Gerando Prisma Client…' &&
         npx prisma generate &&
@@ -38,6 +40,6 @@ services:
 
         echo '🎉 Iniciando a aplicação…' &&
         npm start
-       "
+      "
 volumes:
   db_data:
