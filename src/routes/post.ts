@@ -16,7 +16,7 @@ const router = Router();
  * @swagger
  * /posts/search:
  *   get:
- *     summary: Busca postagens por termo
+ *     summary: Busca postagens por termo.
  *     tags: [Posts]
  *     parameters:
  *       - in: query
@@ -27,15 +27,19 @@ const router = Router();
  *         description: Termo de busca
  *     responses:
  *       200:
- *         description: Resultado da busca
+ *         description: Resultado da busca.
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Post'
+ *                 $ref: '#/components/schemas/PostResponse'
  *       400:
- *         description: Erro de validação
+ *         description: Erro de validação.
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  */
 router.get(
   '/search',
@@ -47,7 +51,7 @@ router.get(
  * @swagger
  * /posts:
  *   post:
- *     summary: Cria uma nova postagem
+ *     summary: Cria uma nova postagem.
  *     tags: [Posts]
  *     requestBody:
  *       required: true
@@ -57,35 +61,39 @@ router.get(
  *             $ref: '#/components/schemas/CreatePostInput'
  *     responses:
  *       201:
- *         description: Postagem criada
+ *         description: Postagem criada.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Post'
+ *               $ref: '#/components/schemas/PostResponse'
  *       400:
- *         description: Erro de validação
+ *         description: Erro de validação.
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  */
-router.post(
-  '/',
-  authorize([Roles.Professor]),
-  PostController.create,
-);
+router.post('/', authorize([Roles.Professor]), PostController.create);
 
 /**
  * @swagger
  * /posts:
  *   get:
- *     summary: Lista todas as postagens
+ *     summary: Lista todas as postagens.
  *     tags: [Posts]
  *     responses:
  *       200:
- *         description: Lista de postagens
+ *         description: Lista de postagens.
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Post'
+ *                 $ref: '#/components/schemas/PostResponse'
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  */
 router.get('/', authorize([Roles.Aluno, Roles.Professor]), PostController.list);
 
@@ -93,7 +101,7 @@ router.get('/', authorize([Roles.Aluno, Roles.Professor]), PostController.list);
  * @swagger
  * /posts/{id}:
  *   get:
- *     summary: Obtém uma postagem por ID
+ *     summary: Obtém uma postagem por ID.
  *     tags: [Posts]
  *     parameters:
  *       - in: path
@@ -104,13 +112,17 @@ router.get('/', authorize([Roles.Aluno, Roles.Professor]), PostController.list);
  *         description: ID da postagem
  *     responses:
  *       200:
- *         description: Postagem encontrada
+ *         description: Postagem encontrada.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Post'
+ *               $ref: '#/components/schemas/PostResponse'
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  *       404:
- *         description: Postagem não encontrada
+ *         description: Postagem não encontrada.
  */
 router.get(
   '/:id',
@@ -122,7 +134,7 @@ router.get(
  * @swagger
  * /posts/{id}:
  *   put:
- *     summary: Atualiza uma postagem existente
+ *     summary: Atualiza uma postagem existente.
  *     tags: [Posts]
  *     parameters:
  *       - in: path
@@ -139,15 +151,19 @@ router.get(
  *             $ref: '#/components/schemas/UpdatePostInput'
  *     responses:
  *       200:
- *         description: Postagem atualizada
+ *         description: Postagem atualizada.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Post'
+ *               $ref: '#/components/schemas/PostResponse'
  *       400:
- *         description: Erro de validação
+ *         description: Erro de validação.
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  *       404:
- *         description: Postagem não encontrada
+ *         description: Postagem não encontrada.
  */
 router.put('/:id', authorize([Roles.Professor]), PostController.update);
 
@@ -155,7 +171,7 @@ router.put('/:id', authorize([Roles.Professor]), PostController.update);
  * @swagger
  * /posts/{id}:
  *   delete:
- *     summary: Remove uma postagem
+ *     summary: Remove uma postagem.
  *     tags: [Posts]
  *     parameters:
  *       - in: path
@@ -166,9 +182,13 @@ router.put('/:id', authorize([Roles.Professor]), PostController.update);
  *         description: ID da postagem
  *     responses:
  *       204:
- *         description: Postagem removida
+ *         description: Postagem removida com sucesso.
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  *       404:
- *         description: Postagem não encontrada
+ *         description: Postagem não encontrada.
  */
 router.delete('/:id', authorize([Roles.Professor]), PostController.delete);
 
@@ -176,7 +196,7 @@ router.delete('/:id', authorize([Roles.Professor]), PostController.delete);
  * @swagger
  * /posts/disable/{id}:
  *   put:
- *     summary: Desabilita uma Postagem
+ *     summary: Desabilita uma postagem.
  *     tags: [Posts]
  *     parameters:
  *       - in: path
@@ -187,9 +207,13 @@ router.delete('/:id', authorize([Roles.Professor]), PostController.delete);
  *         description: ID da postagem
  *     responses:
  *       204:
- *         description: Postagem desabilitada
+ *         description: Postagem desabilitada.
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  *       404:
- *         description: Postagem não encontrada
+ *         description: Postagem não encontrada.
  */
 router.put(
   '/disable/:id',
@@ -201,7 +225,7 @@ router.put(
  * @swagger
  * /posts/enable/{id}:
  *   put:
- *     summary: Habilitar uma Postagem
+ *     summary: Habilita uma postagem.
  *     tags: [Posts]
  *     parameters:
  *       - in: path
@@ -212,9 +236,13 @@ router.put(
  *         description: ID da postagem
  *     responses:
  *       204:
- *         description: Postagem habilitar
+ *         description: Postagem habilitada.
+ *       401:
+ *         description: Credenciais inválidas ou token malformado.
+ *       403:
+ *         description: Perfil de acesso não autorizado.
  *       404:
- *         description: Postagem não encontrada
+ *         description: Postagem não encontrada.
  */
 router.put('/enable/:id', authorize([Roles.Professor]), PostController.enable);
 

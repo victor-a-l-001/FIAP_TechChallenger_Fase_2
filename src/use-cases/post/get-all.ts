@@ -1,13 +1,13 @@
-import { Roles } from '../../types/roles';
-import { PostResponseDTO } from '../../dtos/post-dto';
-import { PostRepository } from '../../repositories/post';
+import { Roles } from '../../types/roles'; 
+import { PostRepository } from '../../repositories/post'; 
+import { PostResponse } from 'src/responses/post-response';
 
 export class GetAllPostsUseCase {
   constructor(private postRepository: PostRepository) {}
 
-  async execute(userType: number): Promise<PostResponseDTO[]> {
+  async execute(userType: number): Promise<PostResponse[]> {
     var aluno: boolean = userType == Roles.Aluno;
-    var response: PostResponseDTO[] = [];
+    var response: PostResponse[] = [];
 
     let posts = await this.postRepository.findMany();
 

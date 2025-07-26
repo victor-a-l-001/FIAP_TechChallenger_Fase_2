@@ -1,7 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { Application } from 'express';
-import { config } from './config';
+import { Application } from 'express'; 
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -64,7 +63,7 @@ const options: swaggerJsdoc.Options = {
             content: { type: 'string' },
           },
         },
-        Post: {
+        PostResponse: {
           type: 'object',
           properties: {
             id: { type: 'integer', example: 1 },
@@ -99,10 +98,7 @@ const options: swaggerJsdoc.Options = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis:
-    config.server.env === 'docker'
-      ? ['./dist/routes/*.js']
-      : ['./src/routes/*.ts'],
+  apis:  ['./src/routes/*.ts', './dist/routes/*.js'], 
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

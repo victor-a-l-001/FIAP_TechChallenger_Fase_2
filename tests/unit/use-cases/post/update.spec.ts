@@ -1,7 +1,7 @@
 import { UpdatePostUseCase } from '../../../../src/use-cases/post/update';
 import { PostRepository } from '../../../../src/repositories/post';
 import { UpdatePostDTO } from '../../../../src/schemas/post';
-import { PostResponseDTO } from '../../../../src/dtos/post-dto';
+import { PostResponse } from '../../../../src/responses/post-response';
 
 describe('UpdatePostUseCase', () => {
   let postRepo: Partial<PostRepository>;
@@ -62,6 +62,6 @@ describe('UpdatePostUseCase', () => {
       },
       createdAt: updatedPost.createdAt,
       updatedAt: updatedPost.updatedAt,
-    } as PostResponseDTO);
+    } as PostResponse);
   });
 });

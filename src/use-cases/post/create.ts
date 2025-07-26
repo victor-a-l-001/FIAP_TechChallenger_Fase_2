@@ -1,8 +1,8 @@
-import { Roles } from '../../types/roles';
-import { PostResponseDTO } from '../../dtos/post-dto';
+import { Roles } from '../../types/roles'; 
 import { PostRepository } from '../../repositories/post';
 import { UserRepository } from '../../repositories/user';
-import { CreatePostDTO } from '../../schemas/post';
+import { CreatePostDTO } from '../../schemas/post'; 
+import { PostResponse } from 'src/responses/post-response';
 
 export class CreatePostUseCase {
   constructor(
@@ -10,7 +10,7 @@ export class CreatePostUseCase {
     private userRepository: UserRepository,
   ) {}
 
-  async execute(data: CreatePostDTO): Promise<PostResponseDTO> {
+  async execute(data: CreatePostDTO): Promise<PostResponse> {
     const author = await this.userRepository.findById(data.authorId);
 
     if (!author) throw new Error('Professor não encontrado.');

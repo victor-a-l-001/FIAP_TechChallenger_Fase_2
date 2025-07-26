@@ -1,15 +1,4 @@
-export interface CreatePostDTO {
-  title: string;
-  content: string;
-  authorId: number;
-}
-
-export interface UpdatePostDTO {
-  title?: string;
-  content?: string;
-}
-
-export interface PostResponseDTO {
+export interface PostResponse {
   id: number;
   title: string;
   content: string;

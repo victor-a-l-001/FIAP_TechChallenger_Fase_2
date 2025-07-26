@@ -1,6 +1,6 @@
 import { GetPostUseCase } from '../../../../src/use-cases/post/get';
 import { PostRepository } from '../../../../src/repositories/post';
-import { PostResponseDTO } from '../../../../src/dtos/post-dto';
+import { PostResponse } from '../../../../src/responses/post-response';
 import { Roles } from '../../../../src/types/roles';
 
 describe('GetPostUseCase', () => {
@@ -74,10 +74,10 @@ describe('GetPostUseCase', () => {
       },
       createdAt: enabledPost.createdAt,
       updatedAt: enabledPost.updatedAt,
-    } as PostResponseDTO);
+    } as PostResponse);
   });
 
-  it('deve retornar PostResponseDTO para Professor mesmo quando o post estiver desabilitado', async () => {
+  it('deve retornar PostResponse para Professor mesmo quando o post estiver desabilitado', async () => {
     (postRepo.findById as jest.Mock).mockResolvedValue(disabledPost);
 
     const result = await useCase.execute(2, Roles.Professor);
@@ -96,6 +96,6 @@ describe('GetPostUseCase', () => {
       },
       createdAt: disabledPost.createdAt,
       updatedAt: disabledPost.updatedAt,
-    } as PostResponseDTO);
+    } as PostResponse);
   });
 });

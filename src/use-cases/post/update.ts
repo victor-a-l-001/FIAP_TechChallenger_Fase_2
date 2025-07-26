@@ -1,11 +1,12 @@
-import { PostResponseDTO } from '../../dtos/post-dto';
+ 
+import { PostResponse } from 'src/responses/post-response';
 import { PostRepository } from '../../repositories/post';
 import { UpdatePostDTO } from '../../schemas/post';
 
 export class UpdatePostUseCase {
   constructor(private postRepository: PostRepository) {}
 
-  async execute(id: number, data: UpdatePostDTO): Promise<PostResponseDTO> {
+  async execute(id: number, data: UpdatePostDTO): Promise<PostResponse> {
     const existing = await this.postRepository.findById(id);
     if (!existing) throw new Error('Postagem não localizada.');
 

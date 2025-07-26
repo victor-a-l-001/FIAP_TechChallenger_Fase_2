@@ -1,6 +1,6 @@
 import { GetAllPostsUseCase } from '../../../../src/use-cases/post/get-all';
 import { PostRepository } from '../../../../src/repositories/post';
-import { PostResponseDTO } from '../../../../src/dtos/post-dto';
+import { PostResponse } from '../../../../src/responses/post-response';
 import { Roles } from '../../../../src/types/roles';
 
 describe('GetAllPostsUseCase', () => {
@@ -70,7 +70,7 @@ describe('GetAllPostsUseCase', () => {
       },
       createdAt: postsSample[0].createdAt,
       updatedAt: postsSample[0].updatedAt,
-    } as PostResponseDTO);
+    } as PostResponse);
     expect(postRepo.findMany).toHaveBeenCalledTimes(1);
   });
 
@@ -82,20 +82,23 @@ describe('GetAllPostsUseCase', () => {
     // Ambos os posts devem aparecer
     expect(result).toHaveLength(2);
     expect(result).toEqual(
-      postsSample.map(post => ({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        authorId: post.authorId,
-        disabled: post.disabled,
-        author: {
-          id: post.author.id,
-          name: post.author.name,
-          email: post.author.email,
-        },
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-      } as PostResponseDTO))
+      postsSample.map(
+        (post) =>
+          ({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            authorId: post.authorId,
+            disabled: post.disabled,
+            author: {
+              id: post.author.id,
+              name: post.author.name,
+              email: post.author.email,
+            },
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+          }) as PostResponse,
+      ),
     );
     expect(postRepo.findMany).toHaveBeenCalledTimes(1);
   });

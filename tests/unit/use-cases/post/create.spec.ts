@@ -3,7 +3,7 @@ import { PostRepository } from '../../../../src/repositories/post';
 import { UserRepository } from '../../../../src/repositories/user';
 import { Roles } from '../../../../src/types/roles';
 import { CreatePostDTO } from '../../../../src/schemas/post';
-import { PostResponseDTO } from '../../../../src/dtos/post-dto';
+import { PostResponse } from '../../../../src/responses/post-response';
 
 describe('CreatePostUseCase', () => {
   let postRepo: Partial<PostRepository>;
@@ -91,6 +91,6 @@ describe('CreatePostUseCase', () => {
         email: fakeAuthor.email,
       },
       createdAt: fakePost.createdAt,
-    } as PostResponseDTO);
+    } as PostResponse);
   });
 });

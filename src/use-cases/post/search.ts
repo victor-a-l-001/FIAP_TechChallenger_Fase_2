@@ -1,11 +1,11 @@
-import { Roles } from '../../types/roles';
-import { PostResponseDTO } from '../../dtos/post-dto';
-import { PostRepository } from '../../repositories/post';
+import { Roles } from '../../types/roles'; 
+import { PostRepository } from '../../repositories/post'; 
+import { PostResponse } from 'src/responses/post-response';
 
 export class SearchPostsUseCase {
   constructor(private postRepository: PostRepository) {}
 
-  async execute(term: string, userType: number): Promise<PostResponseDTO[]> {
+  async execute(term: string, userType: number): Promise<PostResponse[]> {
     const aluno: boolean = userType == Roles.Aluno;
     let posts = await this.postRepository.search(term);
 

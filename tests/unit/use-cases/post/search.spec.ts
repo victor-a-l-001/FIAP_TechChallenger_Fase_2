@@ -1,6 +1,6 @@
 import { SearchPostsUseCase } from '../../../../src/use-cases/post/search';
 import { PostRepository } from '../../../../src/repositories/post';
-import { PostResponseDTO } from '../../../../src/dtos/post-dto';
+import { PostResponse } from '../../../../src/responses/post-response';
 import { Roles } from '../../../../src/types/roles';
 
 describe('SearchPostsUseCase', () => {
@@ -67,7 +67,7 @@ describe('SearchPostsUseCase', () => {
       },
       createdAt: fakePosts[0].createdAt,
       updatedAt: fakePosts[0].updatedAt,
-    } as PostResponseDTO);
+    } as PostResponse);
   });
 
   it('não deve filtrar posts desabilitados para perfil Agente', async () => {
@@ -91,7 +91,7 @@ describe('SearchPostsUseCase', () => {
         },
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
-      } as PostResponseDTO))
+      } as PostResponse))
     );
   });
 
