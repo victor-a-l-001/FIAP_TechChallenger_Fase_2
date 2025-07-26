@@ -1,7 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
+import path from 'path';
 
 const prisma = new PrismaClient();
+const env = process.env.NODE_ENV ?? 'local';
+dotenv.config({
+  path: path.resolve(__dirname, `../.env.${env}`),
+});
 
 async function main() {
   const hashedPassword = await bcrypt.hash("123456", 10);
