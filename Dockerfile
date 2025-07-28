@@ -61,4 +61,4 @@ EXPOSE 3000
 # Comando de inicialização:
 # - Roda as migrations com `prisma migrate deploy`
 # - Inicia o servidor com o build compilado
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/server.js"]
