@@ -49,11 +49,12 @@ RUN apt-get update \
 COPY package*.json ./
 RUN npm install --omit=dev
 
+# Copia schema do Prisma e gera o cliente
+COPY prisma ./prisma
+RUN npx prisma generate
+
 # Copia apenas os arquivos buildados da etapa anterior
 COPY --from=build /app/dist ./dist
-
-# Copia o schema do Prisma (útil caso precise rodar comandos como `migrate deploy`)
-COPY prisma ./prisma
 
 # Expõe a porta padrão da aplicação (Render usará a variável PORT)
 EXPOSE 3000
