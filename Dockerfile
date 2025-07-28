@@ -1,26 +1,64 @@
-FROM node:20-slim
- 
-ENV NODE_ENV=production
- 
+# ==========================
+# 🏗️ Etapa de build
+# ==========================
+
+# Usa imagem base leve do Node.js
+FROM node:20-slim AS build
+
+# Define diretório de trabalho
 WORKDIR /app
 
-# 1) Instala client do Postgres (pg_isready)
+# Instala o cliente do PostgreSQL (necessário para comandos Prisma que acessam o banco)
 RUN apt-get update \
- && apt-get install -y postgresql-client \
- && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
-# 2) Copia package.json e instala deps
+# Copia arquivos de dependências
 COPY package*.json ./
-RUN npm install --omit=dev
 
-# 3) Copia schema Prisma e gera client
+# Instala TODAS as dependências (inclui devDependencies necessárias para build, como TypeScript e types)
+RUN npm install
+
+# Copia schema do Prisma e gera o cliente
 COPY prisma ./prisma
 RUN npx prisma generate
 
-# 4) Copia o código e compila 
+# Copia o restante do código fonte
 COPY tsconfig.json ./
 COPY src ./src
+
+# Compila TypeScript (gera saída em `dist/`)
 RUN npm run build
- 
+
+# ==========================
+# 🚀 Etapa final (imagem para produção)
+# ==========================
+
+# Usa a mesma imagem base (slim) para manter a imagem leve
+FROM node:20-slim
+
+# Define diretório de trabalho
+WORKDIR /app
+
+# Instala novamente o cliente do PostgreSQL (necessário para `prisma migrate deploy` em produção)
+RUN apt-get update \
+    && apt-get install -y postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia arquivos de dependências e instala SOMENTE as de produção
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Copia apenas os arquivos buildados da etapa anterior
+COPY --from=build /app/dist ./dist
+
+# Copia o schema do Prisma (útil caso precise rodar comandos como `migrate deploy`)
+COPY prisma ./prisma
+
+# Expõe a porta padrão da aplicação (Render usará a variável PORT)
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# Comando de inicialização:
+# - Roda as migrations com `prisma migrate deploy`
+# - Inicia o servidor com o build compilado
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

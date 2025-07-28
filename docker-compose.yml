@@ -24,6 +24,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
     command: >
       sh -c "
         echo '⏳ Aguardando o banco…' &&
