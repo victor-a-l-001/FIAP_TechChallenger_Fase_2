@@ -9,7 +9,7 @@ import { config } from '../config';
 type JWTExpiresIn = `${number}${'ms' | 's' | 'm' | 'h' | 'd' | 'w' | 'y'}`;
 
 const JWT_SECRET = config.jwt.secret as Secret;
-const JWT_EXPIRES_IN = (config.jwt.expiresIn ?? '1h') as JWTExpiresIn;
+const JWT_EXPIRES_IN = (config.jwt.expiresIn) as JWTExpiresIn;
 
 const signOptions: SignOptions = {
   expiresIn: JWT_EXPIRES_IN,

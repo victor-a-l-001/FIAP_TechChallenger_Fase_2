@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-const env = process.env.NODE_ENV ?? 'local';
+const env = process.env.NODE_ENV; 
 dotenv.config({
-  path: path.resolve(__dirname, `../.env.${env}`),
+  path: path.resolve(process.cwd(), `.env.${env}`),
 });
 
 console.log('Executando em:', env);
@@ -26,6 +26,6 @@ export const config = {
   },
   server: {
     port: Number(PORT) || 3000, 
-    env: NODE_ENV || 'local',
+    env: NODE_ENV,
   },
 };
