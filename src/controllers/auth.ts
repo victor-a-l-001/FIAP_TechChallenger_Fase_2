@@ -34,6 +34,7 @@ export class AuthController {
       );
       const payload = {
         sub: user.id.toString(),
+        userTypeId: user?.userTypeId,
         user: {
           name: user.name,
           email: user.email,
