@@ -75,6 +75,7 @@ describe('AuthController.login', () => {
     jest.spyOn(LoginSchema, 'parse').mockImplementation((v) => v as any);
     const fakeUser = {
       id: 1,
+      name: 'Teste',
       email: 'a@b.com',
       password: 'hashed-password',
       userTypeId: 1,
@@ -94,16 +95,24 @@ describe('AuthController.login', () => {
   it('deve gerar token e retornar 200 com { token } quando credenciais válidas', async () => {
     req.body = { email: 'a@b.com', password: 'rightpass' };
     jest.spyOn(LoginSchema, 'parse').mockImplementation((v) => v as any);
+
     const fakeUser = {
       id: 2,
+      name: 'Teste',
       email: 'a@b.com',
       password: 'hashed-password',
       userTypeId: 2,
     };
+
+    const fakeUserType = { id: 2, name: 'Admin' };
+
     (UserRepositoryPrisma as jest.Mock).mockImplementation(() => ({
       findByEmail: jest.fn().mockResolvedValue(fakeUser),
+      findTypeId: jest.fn().mockResolvedValue(fakeUserType),
     }));
+
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
     const fakeToken = 'jwt.token.here';
     (jwt.sign as jest.Mock).mockReturnValue(fakeToken);
 
@@ -111,16 +120,17 @@ describe('AuthController.login', () => {
 
     const expectedPayload = {
       sub: fakeUser.id.toString(),
-      email: fakeUser.email,
-      userTypeId: fakeUser.userTypeId,
+      user: {
+        name: fakeUser.name,
+        email: fakeUser.email,
+        roles: [fakeUserType.name],
+      },
     };
     const expectedOpts: SignOptions = { expiresIn: '1h' };
-    expect(jwt.sign).toHaveBeenCalledWith(
-      expectedPayload,
-      'testsecret',
-      expectedOpts,
-    );
 
+    expect(jwt.sign).toHaveBeenCalledWith(expectedPayload, 'testsecret', expectedOpts);
+
+    // não deve setar status manualmente (logo, 200 por padrão)
     expect(statusMock).not.toHaveBeenCalled();
     expect(jsonMock).toHaveBeenCalledWith({ token: fakeToken });
   });

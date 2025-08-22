@@ -9,7 +9,7 @@ import { config } from '../config';
 type JWTExpiresIn = `${number}${'ms' | 's' | 'm' | 'h' | 'd' | 'w' | 'y'}`;
 
 const JWT_SECRET = config.jwt.secret as Secret;
-const JWT_EXPIRES_IN = (config.jwt.expiresIn) as JWTExpiresIn;
+const JWT_EXPIRES_IN = config.jwt.expiresIn as JWTExpiresIn;
 
 const signOptions: SignOptions = {
   expiresIn: JWT_EXPIRES_IN,
@@ -29,10 +29,16 @@ export class AuthController {
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
 
+      const userType = await new UserRepositoryPrisma().findTypeId(
+        user.userTypeId,
+      );
       const payload = {
         sub: user.id.toString(),
-        email: user.email,
-        userTypeId: user.userTypeId,
+        user: {
+          name: user.name,
+          email: user.email,
+          roles: [userType?.name],
+        },
       };
       const token = jwt.sign(payload, JWT_SECRET, signOptions);
 

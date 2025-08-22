@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { User, UserType } from '@prisma/client';
 import { CreateUserDTO, UpdateUserDTO } from '../schemas/user';
 
 export interface UserRepository {
@@ -8,4 +8,5 @@ export interface UserRepository {
   findMany(): Promise<User[]>;
   update(id: number, data: UpdateUserDTO): Promise<User>;
   delete(id: number): Promise<void>;
+  findTypeId(id: number): Promise<UserType | null>;
 }
