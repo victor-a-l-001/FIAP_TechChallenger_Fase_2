@@ -1,4 +1,3 @@
-// tests/unit/controllers/auth.spec.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
@@ -57,9 +56,7 @@ describe('AuthController.login', () => {
 
   it('deve retornar 401 quando o usuário não for encontrado', async () => {
     req.body = { email: 'a@b.com', password: '123456' };
-    // força parse bem-sucedido
     jest.spyOn(LoginSchema, 'parse').mockImplementation((v) => v as any);
-    // findByEmail retorna null
     (UserRepositoryPrisma as jest.Mock).mockImplementation(() => ({
       findByEmail: jest.fn().mockResolvedValue(null),
     }));
@@ -103,7 +100,6 @@ describe('AuthController.login', () => {
       password: 'hashed-password',
       userTypeId: 2,
     };
-
     const fakeUserType = { id: 2, name: 'Admin' };
 
     (UserRepositoryPrisma as jest.Mock).mockImplementation(() => ({
@@ -120,6 +116,7 @@ describe('AuthController.login', () => {
 
     const expectedPayload = {
       sub: fakeUser.id.toString(),
+      userTypeId: fakeUser.userTypeId,
       user: {
         name: fakeUser.name,
         email: fakeUser.email,
@@ -129,8 +126,6 @@ describe('AuthController.login', () => {
     const expectedOpts: SignOptions = { expiresIn: '1h' };
 
     expect(jwt.sign).toHaveBeenCalledWith(expectedPayload, 'testsecret', expectedOpts);
-
-    // não deve setar status manualmente (logo, 200 por padrão)
     expect(statusMock).not.toHaveBeenCalled();
     expect(jsonMock).toHaveBeenCalledWith({ token: fakeToken });
   });
@@ -138,7 +133,6 @@ describe('AuthController.login', () => {
   it('deve retornar 500 em caso de erro não previsto', async () => {
     req.body = { email: 'a@b.com', password: 'anypass' };
     jest.spyOn(LoginSchema, 'parse').mockImplementation((v) => v as any);
-    // força exceção genérica em findByEmail
     (UserRepositoryPrisma as jest.Mock).mockImplementation(() => ({
       findByEmail: jest.fn().mockRejectedValue(new Error('DB down')),
     }));
