@@ -25,6 +25,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: ${NODE_ENV}
       PORT: ${PORT}
+      ORIGIN: ${ORIGIN}
     command: >
       sh -c "
         echo '⏳ Aguardando o banco…' &&

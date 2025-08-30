@@ -1,30 +1,22 @@
-// __tests__/config.spec.ts
-import path from 'path';
-
 describe('config.ts', () => {
   let OLD_ENV: NodeJS.ProcessEnv;
   let dotenv: typeof import('dotenv');
 
   beforeEach(() => {
-    // limpa cache do require e mocks anteriores
     jest.resetModules();
     jest.restoreAllMocks();
 
-    // backup e reset de process.env
     OLD_ENV = { ...process.env };
     process.env = { ...OLD_ENV };
 
-    // mocka dotenv.config para não carregar de fato nenhum arquivo
     dotenv = require('dotenv');
     jest.spyOn(dotenv, 'config').mockReturnValue({ parsed: {} } as any);
 
-    // spies de console
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     jest.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterAll(() => {
-    // restaura env original
     process.env = OLD_ENV;
   });
 
@@ -41,6 +33,7 @@ describe('config.ts', () => {
   it('deve emitir warning e usar porta padrão quando PORT não estiver definida', () => {
     process.env.NODE_ENV = 'local';
     process.env.JWT_SECRET = 'xyz';
+    process.env.ORIGIN = 'abc';
     delete process.env.PORT;
 
     const { config } = require('../../src/config');

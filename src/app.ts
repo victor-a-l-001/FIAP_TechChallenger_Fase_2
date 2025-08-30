@@ -6,6 +6,8 @@ import { setupSwagger } from './swagger';
 import postRoutes from './routes/post';
 import { authMiddleware } from './middlewares/Authenticate';
 import authRoutes from './routes/auth';
+import { config } from './config';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
@@ -30,18 +32,25 @@ app.use(express.json());
 app.use(errorHandler);
 
 // 🌐 CORS - definir origens confiáveis
-const allowedOrigins = ['*'];
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-  }),
-);
+const allowlist = new Set(config.cors.origins);
+const corsOptions: cors.CorsOptions = {
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowlist.has(origin)) return cb(null, true);
+    return cb(new Error(`Origin ${origin} não permitido`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+
+app.use(cookieParser());
 
 // Verificar saúde da api
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 // Swagger
@@ -55,5 +64,5 @@ app.use('/api', authMiddleware);
 
 // Rotas protegidas:
 app.use('/api/posts', postRoutes);
-
+ 
 export default app;

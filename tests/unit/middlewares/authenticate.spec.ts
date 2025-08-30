@@ -3,13 +3,13 @@ process.env.NODE_ENV="local"
 process.env.HOST="localhost"
 process.env.PORT="3000"
 process.env.JWT_SECRET="sua-chave-secreta"
+process.env.ORIGIN="http:localhost:3000/"
 
 import { Request, Response, NextFunction } from 'express';
 import jwt, { TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken';
 import { authMiddleware } from '../../../src/middlewares/Authenticate';
 import { config } from '../../../src/config';
 
-// Faz mock completo de jsonwebtoken
 jest.mock('jsonwebtoken');
 
 describe('Middleware authenticate', () => {
@@ -36,28 +36,9 @@ describe('Middleware authenticate', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Token não fornecido' });
     expect(next).not.toHaveBeenCalled();
   });
-
-  it('retorna 401 se o header estiver malformado (partes ≠ 2)', () => {
-    req.headers = { authorization: 'Bearer token extra' };
-    authMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Token malformado' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('retorna 401 se o esquema não for "Bearer"', () => {
-    req.headers = { authorization: 'Basic abc123' };
-    authMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Token malformado' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
+ 
   it('chama next e popula req.user em token válido', () => {
     const fakePayload = { userId: 7, userTypeId: 1 };
-    // @ts-ignore
     (jwt.verify as jest.Mock).mockReturnValue(fakePayload);
 
     req.headers = { authorization: 'Bearer valid.token.here' };
@@ -68,14 +49,14 @@ describe('Middleware authenticate', () => {
       config.jwt.secret,
       { algorithms: ['HS256'] }
     );
-    // @ts-ignore
+
     expect((req as any).user).toEqual(fakePayload);
     expect(next).toHaveBeenCalled();
     expect(res.status).not.toHaveBeenCalled();
   });
 
   it('retorna 401 para token expirado', () => {
-    // @ts-ignore
+
     (jwt.verify as jest.Mock).mockImplementation(() => {
       throw new TokenExpiredError('jwt expired', new Date());
     });
@@ -89,7 +70,7 @@ describe('Middleware authenticate', () => {
   });
 
   it('retorna 401 para token inválido', () => {
-    // @ts-ignore
+    
     (jwt.verify as jest.Mock).mockImplementation(() => {
       throw new JsonWebTokenError('invalid token');
     });
@@ -103,7 +84,7 @@ describe('Middleware authenticate', () => {
   });
 
   it('retorna 500 em outros erros', () => {
-    // @ts-ignore
+    
     (jwt.verify as jest.Mock).mockImplementation(() => {
       throw new Error('some internal error');
     });

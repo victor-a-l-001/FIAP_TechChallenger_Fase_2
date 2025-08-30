@@ -12,13 +12,6 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [{ url: '/api' }],
     components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
       schemas: {
         // Auth
         LoginInput: {
@@ -33,10 +26,10 @@ const options: swaggerJsdoc.Options = {
             password: { type: 'string', minLength: 6, example: 'secret123' },
           },
         },
-        TokenResponse: {
+        LoginResponse: {
           type: 'object',
           properties: {
-            token: { type: 'string', example: 'eyJhbGciOi...' },
+            message: { type: 'string', example: 'Mensagem...' },
           },
         },
         ApiError: {
@@ -96,7 +89,7 @@ const options: swaggerJsdoc.Options = {
         },
       },
     },
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }],
   },
   apis:  ['./src/routes/*.ts', './dist/src/routes/*.js'], 
 };
