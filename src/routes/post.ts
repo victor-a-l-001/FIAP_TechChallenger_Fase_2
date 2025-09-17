@@ -12,34 +12,84 @@ const router = Router();
  *   description: Operações de postagem
  */
 
+
 /**
  * @swagger
  * /posts/search:
  *   get:
- *     summary: Busca postagens por termo.
+ *     summary: Busca postagens por termo (paginação por página/offset).
  *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: q
- *         schema:
- *           type: string
- *         required: true
- *         description: Termo de busca
+ *         schema: { type: string, default: "" }
+ *         required: false
+ *         description: Termo de busca (case-insensitive).
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *         required: false
+ *         description: Página atual (1-based).
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+ *         required: false
+ *         description: Registros por página (máx 100).
  *     responses:
  *       200:
- *         description: Resultado da busca.
+ *         description: Resultado paginado.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/PostResponse'
+ *               $ref: '#/components/schemas/SearchPostsResponseOffset'
  *       400:
  *         description: Erro de validação.
  *       401:
- *         description: Credenciais inválidas ou token malformado.
+ *         description: Credenciais inválidas.
  *       403:
- *         description: Perfil de acesso não autorizado.
+ *         description: Perfil não autorizado.
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     PostAuthor:
+ *       type: object
+ *       properties:
+ *         id:   { type: integer, format: int32 }
+ *         name: { type: string, nullable: true }
+ *         email:{ type: string, format: email }
+ *       required: [id, email]
+ *
+ *     PostResponse:
+ *       type: object
+ *       properties:
+ *         id:        { type: integer, format: int32 }
+ *         title:     { type: string }
+ *         content:   { type: string }
+ *         authorId:  { type: integer, format: int32 }
+ *         disabled:  { type: boolean }
+ *         author:    { $ref: '#/components/schemas/PostAuthor' }
+ *         createdAt: { type: string, format: date-time }
+ *         updatedAt: { type: string, format: date-time, nullable: true }
+ *       required: [id, title, content, authorId, disabled, author, createdAt]
+ *
+ *     SearchPostsResponseOffset:
+ *       type: object
+ *       properties:
+ *         items:
+ *           type: array
+ *           items: { $ref: '#/components/schemas/PostResponse' }
+ *         page:       { type: integer, minimum: 1 }
+ *         limit:      { type: integer, minimum: 1, maximum: 100 }
+ *         total:      { type: integer, minimum: 0 }
+ *         totalPages: { type: integer, minimum: 0 }
+ *         hasNext:    { type: boolean }
+ *         hasPrev:    { type: boolean }
+ *       required: [items, page, limit, total, totalPages, hasNext, hasPrev]
  */
 router.get(
   '/search',

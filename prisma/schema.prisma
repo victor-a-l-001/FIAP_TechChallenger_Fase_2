@@ -31,12 +31,19 @@ model UserType {
 }
 
 model Post {
-  id        Int       @id @default(autoincrement())
-  title     String
-  content   String
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime?
+  title       String
+  content     String
+  disabled    Boolean  @default(false)
+  description String
+
   authorId  Int
-  disabled  Boolean   @default(false)
-  author    User      @relation(fields: [authorId], references: [id])
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+
+
+  @@index([createdAt, id])
+  @@index([disabled, createdAt, id])
+  @@index([authorId])
 }

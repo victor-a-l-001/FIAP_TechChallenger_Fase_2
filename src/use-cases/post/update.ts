@@ -15,6 +15,7 @@ export class UpdatePostUseCase {
       id: post.id,
       title: post.title,
       content: post.content,
+      description: post.description,
       authorId: post.authorId,
       disabled: post.disabled,
       author: {

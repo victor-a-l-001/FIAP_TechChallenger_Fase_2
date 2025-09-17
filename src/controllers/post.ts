@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { PostRepositoryPrisma } from '../repositories/post-prisma';
 import { UserRepositoryPrisma } from '../repositories/user-prisma';
-import {
-  CreatePostSchema,
+import { 
   UpdatePostSchema,
   SearchPostSchema,
+  CreatePostDTO,
 } from '../schemas/post';
 import { CreatePostUseCase } from '../use-cases/post/create';
 import { GetAllPostsUseCase } from '../use-cases/post/get-all';
@@ -32,8 +32,9 @@ const searchPostsUseCase = new SearchPostsUseCase(postRepo);
 export class PostController {
   static async create(req: Request, res: Response) {
     try {
-      const data = CreatePostSchema.parse(req.body);
-      const post = await createPostUseCase.execute(data);
+      const data = req.body as CreatePostDTO;
+      const email = req.user?.user.email!;
+      const post = await createPostUseCase.execute(data, email);
       return res.status(201).json(post);
     } catch (err: any) {
       if (err instanceof ZodError) {
@@ -111,10 +112,17 @@ export class PostController {
 
   static async search(req: Request, res: Response) {
     try {
-      const { q } = SearchPostSchema.parse(req.query);
+      const { q, page, limit } = SearchPostSchema.parse(req.query);
       const user = req.user as JwtPayload;
-      const posts = await searchPostsUseCase.execute(q, user.userTypeId);
-      return res.json(posts);
+
+      const result = await searchPostsUseCase.execute({
+        term: q,
+        userType: user.userTypeId,
+        page,
+        limit,
+      });
+
+      return res.json(result);
     } catch (err: any) {
       if (err instanceof ZodError) {
         return res.status(400).json({ errors: err.flatten().fieldErrors });

@@ -21,6 +21,7 @@ export class GetAllPostsUseCase {
         title: item.title,
         authorId: item.authorId,
         content: item.content,
+        description: item.description,
         updatedAt: item.updatedAt,
         createdAt: item.createdAt,
         disabled: item.disabled,

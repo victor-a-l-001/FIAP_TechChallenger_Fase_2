@@ -1,8 +1,11 @@
-import { PrismaClient } from '@prisma/client';
-import { PostRepository } from './post';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { PostRepository, SearchOptions, SearchResult } from './post';
 import { Post } from '../domain/post';
 
 const prisma = new PrismaClient();
+export const includeAuthor = Prisma.validator<Prisma.PostInclude>()({
+  author: { select: { id: true, name: true, email: true } },
+});
 
 export class PostRepositoryPrisma implements PostRepository {
   async create(
@@ -70,5 +73,48 @@ export class PostRepositoryPrisma implements PostRepository {
       },
       include: { author: { select: { id: true, name: true, email: true } } },
     });
+  }
+
+  async searchOffset(
+    term: string,
+    opts: SearchOptions = {},
+  ): Promise<SearchResult> {
+    const limit = Math.min(Math.max(opts.limit ?? 20, 1), 100);
+    const page = Math.max(opts.page ?? 1, 1);
+    const skip = (page - 1) * limit;
+
+    const baseWhere: Prisma.PostWhereInput = {
+      OR: [
+        { title: { contains: term, mode: 'insensitive' } },
+        { content: { contains: term, mode: 'insensitive' } },
+        { description: { contains: term, mode: 'insensitive' } },
+      ],
+      ...(opts.includeDisabled ? {} : { disabled: false }),
+    };
+
+    const [items, total] = await prisma.$transaction([
+      prisma.post.findMany({
+        where: baseWhere,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip,
+        take: limit,
+        include: includeAuthor,
+      }),
+      prisma.post.count({ where: baseWhere }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit); // se total=0 => 0 páginas
+    const hasPrev = page > 1;
+    const hasNext = totalPages > 0 && page < totalPages;
+
+    return {
+      items,
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext,
+      hasPrev,
+    };
   }
 }

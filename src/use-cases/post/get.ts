@@ -19,6 +19,7 @@ export class GetPostUseCase {
       content: post.content,
       authorId: post.authorId,
       disabled: post.disabled,
+      description: post.description,
       author: {
         id: post.author.id,
         name: post.author.name,

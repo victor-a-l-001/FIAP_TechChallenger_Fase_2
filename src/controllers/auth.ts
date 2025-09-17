@@ -12,15 +12,22 @@ const JWT_SECRET = config.jwt.secret as Secret;
 const JWT_EXPIRES_IN = (config.jwt.expiresIn as JWTExpiresIn) ?? '15m';
 
 const REFRESH_SECRET = (process.env.REFRESH_SECRET as Secret) || JWT_SECRET;
-const REFRESH_EXPIRES_IN = (process.env.REFRESH_EXPIRES_IN as JWTExpiresIn) || '7d';
+const REFRESH_EXPIRES_IN_DEFAULT =
+  (process.env.REFRESH_EXPIRES_IN as JWTExpiresIn) || '7d';
+
+const REFRESH_EXPIRES_IN_REMEMBER =
+  (process.env.REFRESH_EXPIRES_IN_REMEMBER as JWTExpiresIn) ||
+  REFRESH_EXPIRES_IN_DEFAULT;
+
+const REFRESH_EXPIRES_IN_NO_REMEMBER =
+  (process.env.REFRESH_EXPIRES_IN_NO_REMEMBER as JWTExpiresIn) || '1d';
 
 const accessSignOptions: SignOptions = {
   expiresIn: JWT_EXPIRES_IN,
   algorithm: 'HS256',
 };
 
-const refreshSignOptions: SignOptions = {
-  expiresIn: REFRESH_EXPIRES_IN,
+const refreshSignOptionsBase: SignOptions = {
   algorithm: 'HS256',
 };
 
@@ -33,6 +40,8 @@ export interface AppJwtPayload extends JwtPayload {
     roles: string[];
   };
 }
+
+type RefreshPayload = { sub: string; pr?: 0 | 1 };
 
 function getTokenFromReq(req: Request): string | undefined {
   const tokenFromCookie = (req as any).cookies?.jwt as string | undefined;
@@ -55,15 +64,14 @@ function signAccessToken(payload: AppJwtPayload): {
   return { token, exp };
 }
 
-function signRefreshToken(payload: Pick<AppJwtPayload, 'sub'>): {
-  token: string;
-  exp: number;
-} {
-  const token = jwt.sign(
-    { sub: payload.sub },
-    REFRESH_SECRET,
-    refreshSignOptions,
-  );
+function signRefreshToken(
+  payload: RefreshPayload,
+  expiresIn: JWTExpiresIn,
+): { token: string; exp: number } {
+  const token = jwt.sign(payload, REFRESH_SECRET, {
+    ...refreshSignOptionsBase,
+    expiresIn,
+  });
   const { exp } = jwt.decode(token) as { exp: number };
   return { token, exp };
 }
@@ -72,6 +80,7 @@ function setAuthCookies(
   res: Response,
   access: { token: string; exp: number },
   refresh?: { token: string; exp: number },
+  remember?: boolean,
 ) {
   res.cookie('jwt', access.token, {
     httpOnly: true,
@@ -82,13 +91,16 @@ function setAuthCookies(
   });
 
   if (refresh) {
-    res.cookie('refresh', refresh.token, {
+    const base = {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'none' as const,
       path: '/api/auth/refresh',
-      expires: new Date(refresh.exp * 1000),
-    });
+    };
+    const opts = remember
+      ? { ...base, expires: new Date(refresh.exp * 1000) }
+      : base;
+    res.cookie('refresh', refresh.token, opts as any);
   }
 }
 
@@ -113,6 +125,11 @@ export class AuthController {
   static async login(req: Request, res: Response) {
     try {
       const { email, password } = LoginSchema.parse(req.body);
+      const remember: boolean =
+        typeof (req.body as any)?.remember === 'boolean'
+          ? (req.body as any).remember
+          : false;
+
       const repo = new UserRepositoryPrisma();
       const user = await repo.findByEmail(email);
       if (!user)
@@ -134,11 +151,19 @@ export class AuthController {
       };
 
       const access = signAccessToken(payload);
-      const refresh = signRefreshToken({ sub: payload.sub });
 
-      setAuthCookies(res, access, refresh);
+      const refreshTtl = remember
+        ? REFRESH_EXPIRES_IN_REMEMBER
+        : REFRESH_EXPIRES_IN_NO_REMEMBER;
 
-      return res.json({ message: "Login Realizado com Sucesso." });
+      const refresh = signRefreshToken(
+        { sub: payload.sub, pr: remember ? 1 : 0 },
+        refreshTtl,
+      );
+
+      setAuthCookies(res, access, refresh, remember);
+
+      return res.json({ message: 'Login Realizado com Sucesso.' });
     } catch (err: any) {
       if (err instanceof ZodError) {
         const tree = z.treeifyError(err);
@@ -156,6 +181,7 @@ export class AuthController {
 
       const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as JwtPayload & {
         sub: string;
+        pr?: 0 | 1;
       };
       if (!decoded?.sub)
         return res.status(401).json({ error: 'Refresh inválido' });
@@ -178,9 +204,18 @@ export class AuthController {
       };
 
       const access = signAccessToken(payload);
-      const rotatedRefresh = signRefreshToken({ sub: payload.sub });
 
-      setAuthCookies(res, access, rotatedRefresh);
+      const remember = decoded.pr === 1;
+      const refreshTtl = remember
+        ? REFRESH_EXPIRES_IN_REMEMBER
+        : REFRESH_EXPIRES_IN_NO_REMEMBER;
+
+      const rotatedRefresh = signRefreshToken(
+        { sub: payload.sub, pr: remember ? 1 : 0 },
+        refreshTtl,
+      );
+
+      setAuthCookies(res, access, rotatedRefresh, remember);
 
       return res.json({ token: access.token });
     } catch (err) {

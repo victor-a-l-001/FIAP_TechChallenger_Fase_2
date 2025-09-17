@@ -1,6 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { Application } from 'express'; 
+import { Application } from 'express';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -39,14 +39,57 @@ const options: swaggerJsdoc.Options = {
             error: { type: 'string', example: 'Descrição do erro' },
           },
         },
+        SearchPostsResponseOffset: {
+          type: 'object',
+          properties: {
+            items: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/PostResponse' },
+            },
+            page: { type: 'integer', minimum: 1, example: 2 },
+            limit: { type: 'integer', minimum: 1, maximum: 100, example: 20 },
+            total: { type: 'integer', minimum: 0, example: 134 },
+            totalPages: { type: 'integer', minimum: 0, example: 7 },
+            hasNext: { type: 'boolean', example: true },
+            hasPrev: { type: 'boolean', example: true },
+          },
+          required: [
+            'items',
+            'page',
+            'limit',
+            'total',
+            'totalPages',
+            'hasNext',
+            'hasPrev',
+          ],
+          example: {
+            items: [
+              {
+                id: 101,
+                title: 'Node.js com Prisma',
+                content: 'Como paginar resultados com offset...',
+                authorId: 7,
+                disabled: false,
+                author: { id: 7, name: 'Ana', email: 'ana@example.com' },
+                createdAt: '2025-08-31T12:34:56.000Z',
+                updatedAt: null,
+              },
+            ],
+            page: 2,
+            limit: 20,
+            total: 134,
+            totalPages: 7,
+            hasNext: true,
+            hasPrev: true,
+          },
+        },
         // Post
         CreatePostInput: {
           type: 'object',
           required: ['title', 'content', 'authorId'],
           properties: {
             title: { type: 'string', example: 'Titulo Exemplo' },
-            content: { type: 'string', example: 'Conteúdo Exemplo.' },
-            authorId: { type: 'integer', example: 1 },
+            content: { type: 'string', example: 'Conteúdo Exemplo.' }, 
           },
         },
         UpdatePostInput: {
@@ -91,7 +134,7 @@ const options: swaggerJsdoc.Options = {
     },
     security: [{ cookieAuth: [] }],
   },
-  apis:  ['./src/routes/*.ts', './dist/src/routes/*.js'], 
+  apis: ['./src/routes/*.ts', './dist/src/routes/*.js'],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
