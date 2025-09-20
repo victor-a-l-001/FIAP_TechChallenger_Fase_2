@@ -59,9 +59,9 @@ const router = Router();
  *     PostAuthor:
  *       type: object
  *       properties:
- *         id:   { type: integer, format: int32 }
- *         name: { type: string, nullable: true }
- *         email:{ type: string, format: email }
+ *         id:    { type: integer, format: int32 }
+ *         name:  { type: string, nullable: true }
+ *         email: { type: string, format: email }
  *       required: [id, email]
  *
  *     PostResponse:

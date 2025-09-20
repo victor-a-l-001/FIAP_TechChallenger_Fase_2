@@ -1,6 +1,6 @@
-import { PrismaClient, User, UserType } from '@prisma/client';
-import { UserRepository } from './user';
+import { PrismaClient, User, UserType } from '@prisma/client'; 
 import { CreateUserDTO, UpdateUserDTO } from '../schemas/user';
+import { UserRepository } from './user';
 
 const prisma = new PrismaClient();
 

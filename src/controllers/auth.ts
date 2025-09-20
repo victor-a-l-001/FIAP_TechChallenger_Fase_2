@@ -238,6 +238,14 @@ export class AuthController {
         );
       }
 
+      const repo = new UserRepositoryPrisma();
+      const user = await repo.findById(Number(decoded.sub));
+
+      if (user?.disabled) {
+        clearAuthCookies(res);
+        return res.status(401).json({ error: 'Não autenticado' });
+      }
+
       return res.status(200).json({
         user: decoded.user,
         sub: decoded.sub,
