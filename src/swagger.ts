@@ -89,7 +89,7 @@ const options: swaggerJsdoc.Options = {
           required: ['title', 'content', 'authorId'],
           properties: {
             title: { type: 'string', example: 'Titulo Exemplo' },
-            content: { type: 'string', example: 'Conteúdo Exemplo.' }, 
+            content: { type: 'string', example: 'Conteúdo Exemplo.' },
           },
         },
         UpdatePostInput: {
@@ -129,6 +129,30 @@ const options: swaggerJsdoc.Options = {
               },
             },
           },
+        },
+        CreateMessageInput: {
+          type: 'object',
+          required: ['message', 'postId'],
+          properties: {
+            message: { type: 'string', example: 'Comentário do autor.' },
+            postId: { type: 'integer', example: 42 },
+          },
+        },
+        MessageResponse: {
+          type: 'object',
+          properties: {
+            userName: { type: 'string', example: 'joao.silva' },
+            message: {
+              type: 'string',
+              example: 'Olá! Sua solicitação foi recebida.',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2025-09-29T12:34:56Z',
+            },
+          },
+          required: ['message', 'createdAt'],
         },
       },
     },

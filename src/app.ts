@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { setupSwagger } from './swagger';
 import postRoutes from './routes/post';
+import MessageRoutes from './routes/message';
 import { authMiddleware } from './middlewares/Authenticate';
 import authRoutes from './routes/auth';
 import { config } from './config';
@@ -64,5 +65,6 @@ app.use('/api', authMiddleware);
 
 // Rotas protegidas:
 app.use('/api/posts', postRoutes);
+app.use('/api/mensagens', MessageRoutes);
  
 export default app;

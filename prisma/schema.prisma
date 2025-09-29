@@ -20,6 +20,16 @@ model User {
   updatedAt  DateTime? @updatedAt
 
   posts Post[]
+  postMessage PostMessage[]
+}
+
+model PostMessage {
+  id          Int      @id @default(autoincrement())
+  postId      Int
+  userId      Int
+  message     String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
 model UserType {
