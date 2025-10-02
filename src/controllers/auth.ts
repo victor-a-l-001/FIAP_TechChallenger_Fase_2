@@ -9,7 +9,7 @@ import { config } from '../config';
 type JWTExpiresIn = `${number}${'ms' | 's' | 'm' | 'h' | 'd' | 'w' | 'y'}`;
 
 const JWT_SECRET = config.jwt.secret as Secret;
-const JWT_EXPIRES_IN = (config.jwt.expiresIn as JWTExpiresIn) ?? '15m';
+const JWT_EXPIRES_IN = (config.jwt.expiresIn as JWTExpiresIn) ?? '1h';
 
 const REFRESH_SECRET = (process.env.REFRESH_SECRET as Secret) || JWT_SECRET;
 const REFRESH_EXPIRES_IN_DEFAULT =
