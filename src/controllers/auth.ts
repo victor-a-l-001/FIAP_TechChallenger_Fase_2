@@ -6,24 +6,17 @@ import { LoginSchema } from '../schemas/auth';
 import { UserRepositoryPrisma } from '../repositories/user-prisma';
 import { config } from '../config';
 
-type JWTExpiresIn = `${number}${'ms' | 's' | 'm' | 'h' | 'd' | 'w' | 'y'}`;
-
 const JWT_SECRET = config.jwt.secret as Secret;
-const JWT_EXPIRES_IN = (config.jwt.expiresIn as JWTExpiresIn) ?? '1h';
-
-const REFRESH_SECRET = (process.env.REFRESH_SECRET as Secret) || JWT_SECRET;
-const REFRESH_EXPIRES_IN_DEFAULT =
-  (process.env.REFRESH_EXPIRES_IN as JWTExpiresIn) || '7d';
-
-const REFRESH_EXPIRES_IN_REMEMBER =
-  (process.env.REFRESH_EXPIRES_IN_REMEMBER as JWTExpiresIn) ||
-  REFRESH_EXPIRES_IN_DEFAULT;
-
-const REFRESH_EXPIRES_IN_NO_REMEMBER =
-  (process.env.REFRESH_EXPIRES_IN_NO_REMEMBER as JWTExpiresIn) || '1d';
+ 
+const ACCESS_TTL = '1h';
+const REFRESH_TTL_REMEMBER = '24h';
+const REFRESH_TTL_NO_REMEMBER = '1h';
+ 
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 const accessSignOptions: SignOptions = {
-  expiresIn: JWT_EXPIRES_IN,
+  expiresIn: ACCESS_TTL,
   algorithm: 'HS256',
 };
 
@@ -55,10 +48,7 @@ function getRefreshFromReq(req: Request): string | undefined {
   return (req as any).cookies?.refresh as string | undefined;
 }
 
-function signAccessToken(payload: AppJwtPayload): {
-  token: string;
-  exp: number;
-} {
+function signAccessToken(payload: AppJwtPayload): { token: string; exp: number } {
   const token = jwt.sign(payload, JWT_SECRET, accessSignOptions);
   const { exp } = jwt.decode(token) as { exp: number };
   return { token, exp };
@@ -66,12 +56,10 @@ function signAccessToken(payload: AppJwtPayload): {
 
 function signRefreshToken(
   payload: RefreshPayload,
-  expiresIn: JWTExpiresIn,
+  remember: boolean,
 ): { token: string; exp: number } {
-  const token = jwt.sign(payload, REFRESH_SECRET, {
-    ...refreshSignOptionsBase,
-    expiresIn,
-  });
+  const expiresIn = remember ? REFRESH_TTL_REMEMBER : REFRESH_TTL_NO_REMEMBER;
+  const token = jwt.sign(payload, JWT_SECRET, { ...refreshSignOptionsBase, expiresIn });
   const { exp } = jwt.decode(token) as { exp: number };
   return { token, exp };
 }
@@ -87,7 +75,7 @@ function setAuthCookies(
     secure: true,
     sameSite: 'none',
     path: '/',
-    expires: new Date(access.exp * 1000),
+    maxAge: HOUR_MS,
   });
 
   if (refresh) {
@@ -97,10 +85,10 @@ function setAuthCookies(
       sameSite: 'none' as const,
       path: '/api/auth/refresh',
     };
-    const opts = remember
-      ? { ...base, expires: new Date(refresh.exp * 1000) }
-      : base;
-    res.cookie('refresh', refresh.token, opts as any);
+    res.cookie('refresh', refresh.token, {
+      ...base,
+      maxAge: remember ? DAY_MS : HOUR_MS,
+    } as any);
   }
 }
 
@@ -132,12 +120,10 @@ export class AuthController {
 
       const repo = new UserRepositoryPrisma();
       const user = await repo.findByEmail(email);
-      if (!user)
-        return res.status(401).json({ error: 'Credenciais inválidas' });
+      if (!user) return res.status(401).json({ error: 'Credenciais inválidas' });
 
       const valid = await bcrypt.compare(password, user.password);
-      if (!valid)
-        return res.status(401).json({ error: 'Credenciais inválidas' });
+      if (!valid) return res.status(401).json({ error: 'Credenciais inválidas' });
 
       const userType = await repo.findTypeId(user.userTypeId);
       const payload: AppJwtPayload = {
@@ -151,15 +137,7 @@ export class AuthController {
       };
 
       const access = signAccessToken(payload);
-
-      const refreshTtl = remember
-        ? REFRESH_EXPIRES_IN_REMEMBER
-        : REFRESH_EXPIRES_IN_NO_REMEMBER;
-
-      const refresh = signRefreshToken(
-        { sub: payload.sub, pr: remember ? 1 : 0 },
-        refreshTtl,
-      );
+      const refresh = signRefreshToken({ sub: payload.sub, pr: remember ? 1 : 0 }, remember);
 
       setAuthCookies(res, access, refresh, remember);
 
@@ -176,15 +154,13 @@ export class AuthController {
   static async refresh(req: Request, res: Response) {
     try {
       const refreshToken = getRefreshFromReq(req);
-      if (!refreshToken)
-        return res.status(401).json({ error: 'Refresh token ausente' });
+      if (!refreshToken) return res.status(401).json({ error: 'Refresh token ausente' });
 
-      const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as JwtPayload & {
+      const decoded = jwt.verify(refreshToken, JWT_SECRET) as JwtPayload & {
         sub: string;
         pr?: 0 | 1;
       };
-      if (!decoded?.sub)
-        return res.status(401).json({ error: 'Refresh inválido' });
+      if (!decoded?.sub) return res.status(401).json({ error: 'Refresh inválido' });
 
       const repo = new UserRepositoryPrisma();
       const user = await repo.findById(Number(decoded.sub));
@@ -204,16 +180,8 @@ export class AuthController {
       };
 
       const access = signAccessToken(payload);
-
       const remember = decoded.pr === 1;
-      const refreshTtl = remember
-        ? REFRESH_EXPIRES_IN_REMEMBER
-        : REFRESH_EXPIRES_IN_NO_REMEMBER;
-
-      const rotatedRefresh = signRefreshToken(
-        { sub: payload.sub, pr: remember ? 1 : 0 },
-        refreshTtl,
-      );
+      const rotatedRefresh = signRefreshToken({ sub: payload.sub, pr: remember ? 1 : 0 }, remember);
 
       setAuthCookies(res, access, rotatedRefresh, remember);
 
@@ -232,10 +200,7 @@ export class AuthController {
       const decoded = jwt.verify(token, JWT_SECRET) as AppJwtPayload;
 
       if (decoded.exp) {
-        res.setHeader(
-          'X-Session-Expires-At',
-          new Date(decoded.exp * 1000).toISOString(),
-        );
+        res.setHeader('X-Session-Expires-At', new Date(decoded.exp * 1000).toISOString());
       }
 
       const repo = new UserRepositoryPrisma();
